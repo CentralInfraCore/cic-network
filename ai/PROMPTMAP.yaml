@@ -83,58 +83,25 @@ entries:
 
   # ── Phase 3: Adapter contracts ──────────────────────────────────────────────
 
-  - task: "switch-adapter-contract"
+  - task: "network-adapter-contract"
     status: pending
     priority: 3
     milestone: adapter-contracts
     blocked_by: "network-resource-domain"
     prompt: |
-      Definiáld a switch-adapter contract-ját: schemas/adapters/switch-adapter.yaml
-      Ez NEM implementáció — interface contract:
-        backend: switch
-        provider: "<switch-id>" (pl. juniper-01, cisco-core)
-        observe: NETCONF GET → NetworkResource state_surface
-        apply:   NETCONF EDIT-CONFIG → admin_state, vlan_id, acl
-        watch:   NETCONF notification stream
-        capabilities: [vlan_tagging, acl, phy_stats]
-      Adapter-agnosztikus: Juniper, Cisco, Aruba mind implementálja.
+      Definiáld az egységes network-adapter contract-ját: schemas/adapters/network-adapter.yaml
+      Ez NEM implementáció — interface contract (D-004 döntés alapján).
+      Minden backend (switch/overlay/cloud) ugyanazt az interface-t implementálja.
+        observe: GET state → NetworkResource state_surface
+        apply:   PATCH/PUT config → config_surface alkalmazása
+        watch:   event stream → NotificationSurface
+      known_implementations per backend:
+        switch:  Juniper (NETCONF), Cisco (NETCONF/SSH), Aruba (REST)
+        overlay: OVS-VSCTL, Linux bridge/iproute2, Proxmox network API
+        cloud:   AWS VPC API, GCP VPC API, Azure VNet API, stb.
     accept: make validate
     produces:
-      - schemas/adapters/switch-adapter.yaml
-
-  - task: "hypervisor-network-adapter-contract"
-    status: pending
-    priority: 4
-    milestone: adapter-contracts
-    blocked_by: "network-resource-domain"
-    prompt: |
-      Definiáld a hypervisor-network-adapter contract-ját:
-      schemas/adapters/hypervisor-network-adapter.yaml
-        backend: overlay
-        provider: "<hypervisor-id>" (pl. proxmox-01, ovs-cluster)
-        observe: OVS/bridge state → NetworkResource state_surface
-        apply:   OVS-VSCTL / ip link → admin_state, vlan_id
-        capabilities: [vlan_tagging, layer3, flow_telemetry]
-    accept: make validate
-    produces:
-      - schemas/adapters/hypervisor-network-adapter.yaml
-
-  - task: "cloud-network-adapter-contract"
-    status: pending
-    priority: 5
-    milestone: adapter-contracts
-    blocked_by: "network-resource-domain"
-    prompt: |
-      Definiáld a cloud-network-adapter contract-ját:
-      schemas/adapters/cloud-network-adapter.yaml
-        backend: cloud
-        provider: [aws, gcp, azure, hcloud, do, ovh, oci]
-        observe: cloud API → NetworkResource state_surface
-        apply:   cloud API → config (cidr, acl, tags)
-        capabilities: [layer3, acl, nat, tagging]
-    accept: make validate
-    produces:
-      - schemas/adapters/cloud-network-adapter.yaml
+      - schemas/adapters/network-adapter.yaml
 
   # ── Phase 4: Első signed release ────────────────────────────────────────────
 

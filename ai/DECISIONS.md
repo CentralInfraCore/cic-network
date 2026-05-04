@@ -39,6 +39,21 @@ Az adapter normalizálja a platform értékeket
 
 ---
 
+## D-004 — Egységes network-adapter contract (2026-05-04)
+
+**Döntés:** Nem lesz 3 különálló adapter contract (switch/hypervisor-network/cloud).
+Egyetlen `network-adapter.yaml` — a backend enum (`switch`, `overlay`, `cloud`) szétválasztja
+a scope-ot, a capabilities lista szűri le amit az adott implementáció tud.
+
+**Miért:** A contract csak azt mondja meg: observe → state_surface, apply → config_surface,
+watch → event stream. Ez igaz mindhárom backendre. A protokoll különbség (NETCONF vs OVS vs
+cloud API) az implementáció belügye, nem a contract-é. A binding_surface `known_adapters`
+listája már elvégzi a szétválasztást.
+
+**Következmény:** `schemas/adapters/network-adapter.yaml` — 1 fájl, minden backend lefedve.
+
+---
+
 ## D-003 — address séma: backend/provider/location/id (2026-05-04)
 
 **Döntés:** A NetworkResource address ugyanolyan struktúrájú mint a ComputeResource:
