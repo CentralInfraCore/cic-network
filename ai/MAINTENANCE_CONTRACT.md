@@ -1,113 +1,40 @@
-# AI Maintenance Contract
-
-A `cic-primitives` repo AI üzemeltetési kézikönyve.
+# AI Maintenance Contract — cic-network
 
 ---
 
-## Boot sorrend (minden session elején kötelező)
+## Mit szabad
 
-1. `mcp__cic-graph__kb_status` — KB friss és elérhető?
-2. `ai/SYSTEM_CONTEXT.md` — teljes architekturális kontextus
-3. `ai/PROMPTMAP.yaml` — mi a következő konkrét task?
-4. `ai/DECISIONS.md` — érintett döntések elolvasása
+- `schemas/domain/network-resource.yaml` módosítása, ha `make validate` zöld marad
+- `schemas/adapters/` bővítése új adapter contract-tal
+- `ai/DECISIONS.md` bővítése új döntéssel (D-NNN formátum, dátummal)
+- `ai/PROMPTMAP.yaml` státusz frissítése (pending → in_progress → done)
+- `dependency.yaml` frissítése ha upstream merge történt
 
-Amíg ez a négy pont nincs meg, ne tégy tényállításokat a repo állapotáról.
+## Mit nem szabad
 
----
+- `schemas/atomic/` és `schemas/aggregate/` módosítása — upstream (cic-primitives)
+- `schemas/index.yaml` módosítása — upstream (cic-primitives)
+- `tools/`, `mk/`, `Makefile` módosítása — upstream (base-repo via primitives)
+- `make validate` megkerülése — ha piros, javítani kell, nem kihagyni
+- Döntés csendes megváltoztatása `ai/DECISIONS.md` bejegyzés nélkül
 
-## Mit módosíthatsz önállóan
-
-- `schemas/atomic/*.yaml` — ha `make validate` zöld marad
-- `schemas/aggregate/*.yaml` — ha `make validate` zöld marad
-- `schemas/examples/*.yaml` — valid domain példák hozzáadása
-- `ai/PROMPTMAP.yaml` — task státusz frissítés (pending → done)
-- `ai/SYSTEM_CONTEXT.md` — állapot szinkronizáció elvégzett Phase után
-
----
-
-## Mit NEM módosíthatsz döntés nélkül
-
-| Terület | Miért tiltott |
-|---|---|
-| `schemas/index.yaml` spec struktúrája | meta-schema contract — törhet minden validáció |
-| Bármely slot `mode:` értéke aggregate-ben | downstream repókat töri (D-005) |
-| `tools/compiler.py` validációs logika | D-008 — design döntés kell hozzá |
-| `dependency.yaml` tartalma | D-007 — csak pinnelt tag, branch tiltott |
-| `.github/workflows/` | base-repo-ból érkezett, ne módosítsd |
-| `ai/DECISIONS.md` meglévő döntései | döntési history — törölni/felülírni tilos |
-
----
-
-## Mikor kell `ai/DECISIONS.md`-be bejegyzés
-
-- Slot `mode:` megváltoztatása (sealed/defaulted/required)
-- Új aggregate primitive bevezetése
-- Kompozíciós mechanizmus érintése (D-001)
-- `compiler.py` validációs logikájának változtatása (D-008)
-- Bármely `TBD` típus véglegesítése
-
-## Mikor elég csak `PROMPTMAP.yaml`-t frissíteni
-
-- Task státusz frissítés (pending → in_progress → done)
-- Új task hozzáadása meglévő milestone alá
-- Accept criteria pontosítása
-
----
-
-## Validáció nélkül TILOS commitolni
+## Release folyamat
 
 ```bash
-make validate
+git checkout -b network/releases/vX.Y.Z
+tools/vault-sign-agent.sh -k <developer.key> -c <developer.crt>
+export VAULT_ADDR="https://127.0.0.1:18200"
+export VAULT_TOKEN=$(cat $XDG_RUNTIME_DIR/vault/sign-token)
+export VAULT_SKIP_VERIFY=1
+make release
+git tag -a "network/@vX.Y.Z" -m "release: X.Y.Z"
 ```
 
-Ha nem zöld: ne commitolj. Nincs kivétel.
+## Mérce
 
----
+`make validate` — ha nem zöld, semmi sem kész.
 
-## Státusz szemantika
-
-| Státusz | Jelentés | Bizonyíték |
-|---|---|---|
-| `defined` | YAML séma létezik, `make validate` zöld | fájl + zöld CI |
-| `draft` | Design megvan írásban, séma még nincs | DECISIONS.md bejegyzés |
-| `concept` | Megbeszélt, formálisan nem rögzítve | megbeszélés / thread |
-
-Ha nem tudod fájl-szinten alátámasztani: ne mondd `defined`-nak.
-
----
-
-## A leggyakoribb hibák
-
-| Hiba | Következmény | Megelőzés |
-|---|---|---|
-| Sealed slot felülírása DomainComposition-ben | compiler.py elkapja, de séma inkonzisztens | D-005 olvasása |
-| `make validate` nélküli commit | rejtett séma törés | hook + fegyelem |
-| Új fogalom bevezetése meglévő helyett | fragmentált modell | D-003: 7 atom végleges |
-| Domain objektumból kiindulás (Pod, Switch) | aggregate helyett instance-t tervezel | D-002 |
-| `TBD` típus döntés nélküli kitöltése | D-008 merge stratégia nyitott | megkérdezni |
-
----
-
-## Design-change workflow
-
-1. Azonosítsd az érintett döntést (`ai/DECISIONS.md`)
-2. Fogalmazd meg mi változna és mi törne
-3. Kérj megerősítést — ne lépj tovább nélküle
-4. Módosítsd a sémát
-5. `make validate` — zöld?
-6. PROMPTMAP task → done
-7. `ai/DECISIONS.md` frissítés ha új döntés született
-
----
-
-## Érvényes / érvénytelen példák
-
-Referenciaként, nem validálandó fájlok:
-
-```
-schemas/examples/          valid domain kompozíciók (make validate ellenőrzi)
-schemas/examples/invalid/  szándékosan érvénytelen fájlok — counterexample-ök
-```
-
-Az `invalid/` könyvtár fájljait a compiler kizárja a validációból.
-Minden invalid fájl tartalmaz `why_invalid:` magyarázatot.
+Lezárási kritérium minden adapter contract-ra:
+1. Az address mező egyezik a network-resource.yaml address kulcsával?
+2. Az observe output mezők mappolnak a state_surface-re?
+3. Az operations capability listája szinkronban van a binding_surface-szel?
