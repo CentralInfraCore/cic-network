@@ -1,7 +1,7 @@
 project:
   name: cic-network
-  description: CIC network domain — switching, routing, firewall and cloud networking
-    as ManagedEntity specializations derived from cic-primitives
+  description: CIC network domain — L2 switching and overlay networking as ManagedEntity
+    specializations derived from cic-primitives and cic-yang building blocks
   license: CC-BY-NC-SA-4.0
   main_branch: network/main
   owner: Gabor Zoltan Sinko
@@ -22,6 +22,7 @@ compiler_settings:
   vault_key_name: cic-my-sign-key
 x-cic:
   repo_type: domain
-  base_primitive: cic-primitives@v0.1.2
+  base_primitive: cic-primitives@v0.1.3
+  yang_layer: cic-yang@v0.1.0
 release:
   version: 0.0.dev

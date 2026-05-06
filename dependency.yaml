@@ -29,7 +29,7 @@ dependencies:
 
   - name: cic-primitives
     source: github.com/CentralInfraCore/cic-primitives
-    tag: primitives/@v0.1.2
+    tag: primitives/@v0.1.3
     mode: remote-merge
     purpose: primitive-schema-base
     imported_paths:
@@ -37,3 +37,17 @@ dependencies:
       - schemas/aggregate/
       - schemas/index.yaml
       - dependencies/
+
+  - name: cic-yang
+    source: github.com/CentralInfraCore/cic-yang
+    tag: yang/@v0.1.0
+    mode: reference
+    purpose: yang-building-blocks
+    referenced_blocks:
+      - ietf-interfaces-base
+      - ietf-interfaces-physical
+      - ietf-interfaces-logical
+      - ietf-interfaces-vlan
+      - ietf-interfaces-tunnel
+      - ietf-ip-v4
+      - ietf-ip-v6

@@ -4,6 +4,28 @@ A fogalmak kialakulásának history-ja.
 
 ---
 
+## D-005 — NetworkInterface v2: RFC 8343 alapú, cic-yang building blockok (2026-05-06)
+
+**Döntés:** A cic-network v2 az egységes `NetworkInterface` DomainComposition-t
+cic-yang building blockok referenciájával definiálja. A v1 `NetworkResource` és
+`network-adapter.yaml` archivált.
+
+**Scope (L-001 tanulság alapján):**
+- ✓ L2 switching: fizikai switch port, OVS bridge, VLAN, VXLAN tunnel
+- ✗ Cloud VPC/subnet — service réteg
+- ✗ Routing protokollok (RFC 8349) — service réteg
+- ✗ ACL/firewall (RFC 8519) — service réteg
+
+**Adapter séma = cic-yang kompozíció:**
+- `switch-netconf-adapter` = ietf-interfaces-physical + ietf-interfaces-vlan
+- `ovs-adapter` = ietf-interfaces-logical + ietf-interfaces-vlan + ietf-interfaces-tunnel + ietf-ip-v4/v6
+
+Ami nincs az adapter sémában → schema validation error (conformance by deletion, D-012).
+
+**Backend értékek:** `switch` (fizikai, NETCONF) | `ovs` (szoftveres, OVS-VSCTL)
+
+---
+
 ## D-001 — NetworkResource: egységes séma, adapter hordozza a paradigmát (2026-05-04)
 
 **Döntés:** Switch port, Subnet, Route, SecurityGroup különálló DomainComposition-ök

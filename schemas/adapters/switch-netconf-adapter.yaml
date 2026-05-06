@@ -1,0 +1,89 @@
+---
+metadata:
+  name: switch-netconf-adapter
+  version: v0.0.dev
+  description: >
+    Fizikai managed switch adapter contract — Juniper, Cisco, Aruba és más
+    NETCONF/RESTCONF képes switch-ek. cic-yang building blockok kompozíciója.
+    Ez a séma egyszerre az interface contract ÉS a conformance deklaráció:
+    ami nincs benne → nem implementált → schema validation error write-ra.
+  owner: Gabor Zoltan Sinko
+  tags:
+    - adapter-contract
+    - network
+    - switch
+    - netconf
+  validatedBy:
+    name: cic-primitives
+    version: v0.1.3
+
+spec:
+  kind: AdapterContract
+  domain: "cic:network:NetworkInterface"
+
+  yang_composition:
+    blocks:
+      - block: ietf-interfaces-physical
+        source: cic-yang@v0.1.0
+        reason: fizikai port kezelés (speed, duplex, MAC, statistics)
+      - block: ietf-interfaces-vlan
+        source: cic-yang@v0.1.0
+        reason: VLAN tagging — access/trunk/hybrid, allowed_vlans
+    note: >
+      ietf-interfaces-logical, ietf-interfaces-tunnel, ietf-ip-v4, ietf-ip-v6
+      NEM szerepel — fizikai switch nem kezeli ezeket (conformance by deletion).
+
+  backends:
+    - name: switch
+      description: Fizikai managed switch NETCONF/RESTCONF-on
+      protocol: NETCONF (RFC 6241) / RESTCONF (RFC 8040)
+      known_implementations:
+        - Juniper Junos (NETCONF native)
+        - Cisco IOS-XE (NETCONF/RESTCONF)
+        - Aruba AOS-CX (REST)
+
+  operations:
+    - name: observe
+      description: >
+        Switch interfész aktuális állapotának lekérdezése NETCONF GET-tel.
+        Visszaad egy NetworkInterface state_surface-t.
+        Adapter normalizálja: JUNOS 'present'+'up' → oper_status: up
+      input:
+        - name: backend
+          type: string
+        - name: provider
+          type: string
+        - name: location
+          type: string
+        - name: id
+          type: string
+      output:
+        ref: NetworkInterface.state_surface
+
+    - name: apply
+      description: >
+        Config alkalmazása NETCONF EDIT-CONFIG-gal. Idempotens — adapter
+        ellenőrzi az aktuális állapotot, csak a diff-et alkalmazza.
+        Nem implementált mezőre write → hard reject (D-012).
+      input:
+        ref: NetworkInterface.config_surface
+      output:
+        - name: applied
+          type: boolean
+
+    - name: watch
+      description: >
+        NETCONF notification stream feliratkozás (RFC 5277).
+        link-up / link-down notifikációk → NetworkInterface notification_surface.
+      output:
+        stream: true
+        ref: NetworkInterface.notification_surface
+
+  not_implemented_fields:
+    description: >
+      Ezek a NetworkInterface mezők NINCSENEK ebben az adapter sémában.
+      Write kísérlet → "field not implemented on switch adapter" (D-012 hard reject).
+    fields:
+      - logical_interfaces  # fizikai switch nem kezeli
+      - vxlans              # fizikai switch nem kezeli (csak overlay/OVS)
+      - ip (logical_interfaces.ip)  # L3 IP nem switch concern
