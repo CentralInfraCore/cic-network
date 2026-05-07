@@ -318,6 +318,245 @@ spec:
             optional: true
             description: IP konfiguráció a tunnel interfészen (netplan-kompatibilis)
 
+      # ── STP / Spanning Tree (capability: stp) ────────────────────────────────
+      - name: stp
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: object
+        role: config
+        optional: true
+        capability: stp
+        description: Spanning Tree Protocol konfiguráció (IEEE 802.1D/Q/w/s)
+        properties:
+          - name: enabled
+            shape_type: scalar
+            scalar_type: boolean
+            default: true
+          - name: mode
+            shape_type: scalar
+            scalar_type: string
+            contract:
+              - type: enum
+                expression: [stp, rstp, mstp]
+            default: rstp
+          - name: port_priority
+            shape_type: scalar
+            scalar_type: integer
+            default: 128
+            description: STP port prioritás (0-240, 16-os lépésekben)
+          - name: path_cost
+            shape_type: scalar
+            scalar_type: integer
+            optional: true
+            description: STP path cost (null = auto, sebességből számított)
+          - name: edge_port
+            shape_type: scalar
+            scalar_type: boolean
+            default: false
+            description: Edge port / PortFast — uplink nélküli végpont portok
+          - name: bpdu_guard
+            shape_type: scalar
+            scalar_type: boolean
+            default: false
+            description: BPDU Guard — edge porton BPDU érkezésekor port shutdown
+          - name: bpdu_filter
+            shape_type: scalar
+            scalar_type: boolean
+            default: false
+            description: BPDU Filter — BPDU küldés/fogadás tiltása
+          - name: root_guard
+            shape_type: scalar
+            scalar_type: boolean
+            default: false
+            description: Root Guard — megakadályozza hogy ez a port root legyen
+
+      # ── PoE (capability: poe) ─────────────────────────────────────────────────
+      - name: poe
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: object
+        role: config
+        optional: true
+        capability: poe
+        description: Power over Ethernet konfiguráció (IEEE 802.3at/bt)
+        properties:
+          - name: enabled
+            shape_type: scalar
+            scalar_type: boolean
+            default: true
+          - name: mode
+            shape_type: scalar
+            scalar_type: string
+            contract:
+              - type: enum
+                expression: [auto, static, never]
+            default: auto
+            description: auto=eszköz igénye alapján, static=fix osztás, never=tiltott
+          - name: priority
+            shape_type: scalar
+            scalar_type: string
+            contract:
+              - type: enum
+                expression: [low, high, critical]
+            default: low
+            description: PoE prioritás — teljesítmény túllépésnél alacsony prioritású portok zárnak le
+          - name: power_limit_mw
+            shape_type: scalar
+            scalar_type: integer
+            optional: true
+            description: Maximum kiosztott teljesítmény milliwattban (null = automatikus)
+
+      # ── Storm control (capability: storm_control) ─────────────────────────────
+      - name: storm_control
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: object
+        role: config
+        optional: true
+        capability: storm_control
+        description: Broadcast/multicast flood korlát
+        properties:
+          - name: broadcast_threshold_pct
+            shape_type: scalar
+            scalar_type: integer
+            optional: true
+            description: Broadcast forgalom maximum sávszélesség %-ban (1-100)
+          - name: multicast_threshold_pct
+            shape_type: scalar
+            scalar_type: integer
+            optional: true
+            description: Multicast forgalom maximum sávszélesség %-ban
+          - name: unknown_unicast_threshold_pct
+            shape_type: scalar
+            scalar_type: integer
+            optional: true
+            description: Unknown unicast maximum sávszélesség %-ban
+          - name: action
+            shape_type: scalar
+            scalar_type: string
+            contract:
+              - type: enum
+                expression: [drop, shutdown]
+            default: drop
+            description: Küszöb átlépésekor — drop=forgalom eldobás, shutdown=port leállítás
+
+      # ── QinQ / 802.1ad (capability: qinq) ────────────────────────────────────
+      - name: qinq
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: object
+        role: config
+        optional: true
+        capability: qinq
+        description: "QinQ double tagging konfiguráció (IEEE 802.1ad)"
+        properties:
+          - name: enabled
+            shape_type: scalar
+            scalar_type: boolean
+            default: false
+          - name: outer_vlan_id
+            shape_type: scalar
+            scalar_type: integer
+            optional: true
+            description: Külső VLAN tag (service VLAN / S-VLAN, 1-4094)
+          - name: inner_vlan_id
+            shape_type: scalar
+            scalar_type: integer
+            optional: true
+            description: Belső VLAN tag (customer VLAN / C-VLAN, 1-4094)
+          - name: tpid
+            shape_type: scalar
+            scalar_type: string
+            default: "0x88a8"
+            description: "Külső tag TPID — 0x88a8 (IEEE 802.1ad) vagy 0x8100 (legacy)"
+
+      # ── LACP részletek (capability: lacp) ────────────────────────────────────
+      - name: lacp
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: object
+        role: config
+        optional: true
+        capability: lacp
+        description: LACP (Link Aggregation Control Protocol) részletes konfiguráció
+        properties:
+          - name: interval
+            shape_type: scalar
+            scalar_type: string
+            contract:
+              - type: enum
+                expression: [fast, slow]
+            default: slow
+            description: "LACP PDU küldési intervallum — fast: 1s, slow: 30s"
+          - name: system_priority
+            shape_type: scalar
+            scalar_type: integer
+            default: 32768
+            description: LACP rendszer prioritás (1-65535, kisebb = magasabb prioritás)
+          - name: port_priority
+            shape_type: scalar
+            scalar_type: integer
+            default: 32768
+            description: LACP port prioritás (1-65535)
+          - name: min_links
+            shape_type: scalar
+            scalar_type: integer
+            default: 1
+            description: Minimális aktív taginterfészek száma — alatta a LAG leáll
+          - name: max_links
+            shape_type: scalar
+            scalar_type: integer
+            optional: true
+            description: Maximum aktív taginterfészek száma (null = korlátlan)
+
+      # ── LLDP (capability: lldp) ───────────────────────────────────────────────
+      - name: lldp
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: object
+        role: config
+        optional: true
+        capability: lldp
+        description: LLDP konfiguráció (RFC 8516, ietf-lldp cic-yang@v0.1.1)
+        properties:
+          - name: enabled
+            shape_type: scalar
+            scalar_type: boolean
+            default: true
+          - name: transmit
+            shape_type: scalar
+            scalar_type: boolean
+            default: true
+          - name: receive
+            shape_type: scalar
+            scalar_type: boolean
+            default: true
+          - name: tlvs
+            shape_type: collection
+            collection_variant: list
+            optional: true
+            description: Hirdetett TLV-k (system-name, port-description, management-address stb.)
+
+      # ── Port mirroring / SPAN (capability: port_mirror) ──────────────────────
+      - name: port_mirror
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: object
+        role: config
+        optional: true
+        capability: port_mirror
+        description: Port tükrözés / SPAN — forgalom másolása monitoring portra
+        properties:
+          - name: enabled
+            shape_type: scalar
+            scalar_type: boolean
+            default: false
+          - name: direction
+            shape_type: scalar
+            scalar_type: string
+            contract:
+              - type: enum
+                expression: [rx, tx, both]
+            default: both
+            description: Tükrözött forgalom iránya
+          - name: destination
+            shape_type: scalar
+            scalar_type: string
+            description: Célport interface neve ahová a tükrözött forgalom megy
+
       # ── Szülő-gyerek reláció (RFC 8343 higher/lower-layer-if) ─────────────────
       - name: lower_layer_if
         atomic_ref: schemas/atomic/shape.yaml
@@ -418,6 +657,122 @@ spec:
           - name: out_errors
             shape_type: scalar
             scalar_type: integer
+
+      # capability: stp
+      - name: stp_state
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: object
+        role: state
+        optional: true
+        capability: stp
+        description: STP port állapot
+        properties:
+          - name: port_state
+            shape_type: scalar
+            scalar_type: string
+            contract:
+              - type: enum
+                expression: [discarding, learning, forwarding, disabled]
+          - name: port_role
+            shape_type: scalar
+            scalar_type: string
+            contract:
+              - type: enum
+                expression: [root, designated, alternate, backup, disabled]
+          - name: designated_root
+            shape_type: scalar
+            scalar_type: string
+            description: Root bridge MAC cím
+          - name: root_path_cost
+            shape_type: scalar
+            scalar_type: integer
+
+      # capability: poe
+      - name: poe_state
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: object
+        role: state
+        optional: true
+        capability: poe
+        description: PoE aktuális állapot
+        properties:
+          - name: status
+            shape_type: scalar
+            scalar_type: string
+            contract:
+              - type: enum
+                expression: [delivering, searching, fault, disabled, test, other_fault]
+          - name: power_mw
+            shape_type: scalar
+            scalar_type: integer
+            description: Aktuálisan kiosztott teljesítmény milliwattban
+          - name: poe_class
+            shape_type: scalar
+            scalar_type: integer
+            description: IEEE 802.3 PoE osztály (0-8)
+
+      # capability: lldp
+      - name: lldp_neighbors
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: collection
+        collection_variant: list
+        role: state
+        optional: true
+        capability: lldp
+        description: Felfedezett LLDP szomszédok (RFC 8516)
+        item_fields:
+          - name: chassis_id
+            shape_type: scalar
+            scalar_type: string
+            role: key
+          - name: port_id
+            shape_type: scalar
+            scalar_type: string
+          - name: system_name
+            shape_type: scalar
+            scalar_type: string
+            optional: true
+          - name: system_description
+            shape_type: scalar
+            scalar_type: string
+            optional: true
+          - name: port_description
+            shape_type: scalar
+            scalar_type: string
+            optional: true
+          - name: capabilities
+            shape_type: collection
+            collection_variant: list
+            optional: true
+          - name: ttl_seconds
+            shape_type: scalar
+            scalar_type: integer
+          - name: management_addresses
+            shape_type: collection
+            collection_variant: list
+            optional: true
+
+      # capability: lacp
+      - name: lacp_state
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: object
+        role: state
+        optional: true
+        capability: lacp
+        description: LACP aggregáció aktuális állapota
+        properties:
+          - name: active_links
+            shape_type: scalar
+            scalar_type: integer
+            description: Aktív taginterfészek száma
+          - name: standby_links
+            shape_type: scalar
+            scalar_type: integer
+            description: Standby taginterfészek száma
+          - name: aggregation_id
+            shape_type: scalar
+            scalar_type: string
+            description: LACP aggregáció azonosítója
 
   # ── OperationSurface ──────────────────────────────────────────────────────────
   operation_surface:
