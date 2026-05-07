@@ -25,4 +25,33 @@ x-cic:
   base_primitive: cic-primitives@v0.1.3
   yang_layer: cic-yang@v0.1.0
 release:
-  version: 0.0.dev
+  version: 0.3.0
+  timestamp: '2026-05-07T13:50:49.790555+00:00'
+  repository_tree_hash: 5AnDeGRwhLeqXAtuPfWZyEVn0nnpplCGjJg73tJopPs=
+  build_hash: iBVUocB8lKGvKVPV9NJSf1THGVh93cw5CT8ew1woIj8=
+  sign: vault:v1:MEUCIDyrhSfQ5YrFlYN3c94B4qqfumccqxS/HNGDhQ2NtNmZAiEAm2MhasGw+zHK4//gFjbxRkfC6ngACaoMJwl2Zqm0X5U=
+  cert: '-----BEGIN CERTIFICATE-----
+
+    MIICBjCCAaygAwIBAgIUSnRMR6RPnEbg296XWPOqq/u5PCwwCgYIKoZIzj0EAwIw
+
+    QzELMAkGA1UEBhMCSFUxGTAXBgNVBAoMEENlbnRyYWxJbmZyYUNvcmUxGTAXBgNV
+
+    BAMMEENJQyBEZXZlbG9wZXIgQ0EwHhcNMjYwMzIwMTMyMjU5WhcNMjYxMjMxMTMy
+
+    MjU5WjBFMQswCQYDVQQGEwJIVTEZMBcGA1UECgwQQ2VudHJhbEluZnJhQ29yZTEb
+
+    MBkGA1UEAwwSR2Fib3IgWm9sdGFuIFNpbmtvMFkwEwYHKoZIzj0CAQYIKoZIzj0D
+
+    AQcDQgAEIG2CVmTfmLB9pLLclj7YmP2eedAjklpy4LGrU2ijoiy6Xqpuybv7OgJe
+
+    i+ez31s65NEV8+X/ByeX1cstR988z6N8MHowCQYDVR0TBAIwADAdBgNVHQ4EFgQU
+
+    yZN6AIX/TNnIJ9GwAa/NRN3ujHAwHwYDVR0jBBgwFoAUXn6CHYzPUqU4JVP8g+OS
+
+    WeDYjhcwDgYDVR0PAQH/BAQDAgeAMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEF
+
+    BQcDBDAKBggqhkjOPQQDAgNIADBFAiEA+bFzXRoJ4PCQbhAAtpkcMjt0vNj5rEW0
+
+    lOMBGDNyaWkCIB1vmM7PcZzv/c9bIrxF5kqv6QXomouhByUfeNUTbpKW
+
+    -----END CERTIFICATE-----'
