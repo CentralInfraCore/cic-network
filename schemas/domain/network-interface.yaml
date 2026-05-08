@@ -42,6 +42,8 @@ spec:
       source: cic-yang@v0.1.0
     - block: ietf-ip-v6
       source: cic-yang@v0.1.0
+    - block: ietf-lldp
+      source: cic-yang@v0.1.1
 
   # ── PolicySurface ─────────────────────────────────────────────────────────────
   policy_surface:
@@ -60,7 +62,7 @@ spec:
     atomic_ref: schemas/atomic/identity.yaml
     kind: NetworkInterface
     namespace: "cic:network"
-    version: v0.2.dev
+    version: v0.3.dev
     base: "cic:core:ManagedEntity"
     abstract: false
     description: RFC 8343 alapú hálózati interfész erőforrás

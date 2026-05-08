@@ -4,6 +4,29 @@ A fogalmak kialakulásának history-ja.
 
 ---
 
+## D-006 — yang_refs verziókezelési policy (2026-05-08)
+
+**Döntés szükséges** (nyitott, BACKLOG B-001 + B-002)
+
+**Helyzet:**
+A `network-interface.yaml` `yang_refs` szekciója az összes cic-yang blokkot `cic-yang@v0.1.0`-ra hivatkozza,
+de az ietf-lldp `yang/@v0.1.1`-ben jelent meg (v0.1.0-ban nem létezett).
+Emellett a `switch-netconf-adapter.yaml` conformance_matrix-ában:
+```yaml
+yang_ref: cic-yang/schemas/ietf/ietf-lldp.yaml
+```
+Ez relatív path, amely `yang/main` HEAD-en nem létező fájlra mutat (csak a releases branch-en van).
+
+**Döntés:**
+- `yang_refs`-ben block-onkénti explicit verziót kell megadni (ne legyen egyetlen közös forrás)
+- `yang_ref` conformance_matrix bejegyzésekben tag-ankolt formát kell használni:
+  `cic-yang@v0.1.1/schemas/ietf/ietf-lldp.yaml`
+
+**Azonnali javítás (B-001, B-002):** a cic-yang@v0.1.0 → v0.1.1 frissítés az lldp blokknál,
+és a yang_ref path tag-ankolt formára javítása.
+
+---
+
 ## D-005 — NetworkInterface v2: RFC 8343 alapú, cic-yang building blockok (2026-05-06)
 
 **Döntés:** A cic-network v2 az egységes `NetworkInterface` DomainComposition-t
