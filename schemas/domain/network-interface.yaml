@@ -905,6 +905,7 @@ spec:
 derivation_chain:
 
   yang:
+    status: specification-only
     module: cic-network
     namespace: "urn:cic:network"
     base_module: ietf-interfaces
