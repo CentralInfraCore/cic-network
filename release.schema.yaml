@@ -146,8 +146,7 @@ properties:
             description: "PEM-encoded X.509 root CA certificate (trust anchor)."
       signed_payload:
         type: string
-        const: build_hash
-        description: "Identifies what was signed — always 'build_hash', the cryptographic root of the release bundle."
+        description: "The release.build_hash value that was countersigned by the authority."
       sign:
         type: string
         description: "ECDSA signature over release.build_hash (prehashed, DER base64, vault:v1: prefix), verifiable with authority.certificate."

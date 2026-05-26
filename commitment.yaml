@@ -1,5 +1,5 @@
 kind: DeveloperCommitment
-created: '2026-05-26T04:48:12.066327+00:00'
+created: '2026-05-26T04:54:32.154372+00:00'
 validity:
   from: '2026-05-26'
   until: '2027-05-26'
@@ -35,4 +35,4 @@ createdBy:
     '
 pledge:
   content_hash: Cj3tMZDp7l+Pyf8FrgGGjikI7G3NXpLlJaDv9G2UZO4=
-  sign: vault:v1:MEUCIQCu+mPJNNW88MowqmC0SuOSlvbauRZ6BrgduZgqX1e4rAIgLFHacZtwhQedUrrAQYsRJhpkvJr3jWpis5tir7/VflQ=
+  sign: vault:v1:MEQCIAL+KsaLvy1PM4/DDIWk+ddvEHl/GyBdyL+li2EwfKhFAiAc5oochvtM50hUdDZJzzwqINveZBm5xYugEaBUj0srRQ==
