@@ -29,21 +29,21 @@ spec:
 
   yang_refs:
     - block: ietf-interfaces-base
-      source: cic-yang@v0.1.0
+      source: cic-yang@v0.1.3
     - block: ietf-interfaces-physical
-      source: cic-yang@v0.1.0
+      source: cic-yang@v0.1.3
     - block: ietf-interfaces-logical
-      source: cic-yang@v0.1.0
+      source: cic-yang@v0.1.3
     - block: ietf-interfaces-vlan
-      source: cic-yang@v0.1.0
+      source: cic-yang@v0.1.3
     - block: ietf-interfaces-tunnel
-      source: cic-yang@v0.1.0
+      source: cic-yang@v0.1.3
     - block: ietf-ip-v4
-      source: cic-yang@v0.1.0
+      source: cic-yang@v0.1.3
     - block: ietf-ip-v6
-      source: cic-yang@v0.1.0
+      source: cic-yang@v0.1.3
     - block: ietf-lldp
-      source: cic-yang@v0.1.1
+      source: cic-yang@v0.1.3
 
   # ── PolicySurface ─────────────────────────────────────────────────────────────
   policy_surface:
@@ -70,7 +70,7 @@ spec:
   # ── ConfigSurface ─────────────────────────────────────────────────────────────
   config_surface:
     aggregate_ref: schemas/aggregate/config-surface.yaml
-    yang_source: ietf-interfaces-base (cic-yang@v0.1.0)
+    yang_source: ietf-interfaces-base (cic-yang@v0.1.3)
     nodes:
 
       # ── Core (ietf-interfaces-base) ──────────────────────────────────────────
@@ -513,7 +513,7 @@ spec:
         role: config
         optional: true
         capability: lldp
-        description: LLDP konfiguráció (RFC 8516, ietf-lldp cic-yang@v0.1.1)
+        description: LLDP konfiguráció (RFC 8516, ietf-lldp cic-yang@v0.1.3)
         properties:
           - name: enabled
             shape_type: scalar

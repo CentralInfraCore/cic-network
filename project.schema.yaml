@@ -90,28 +90,22 @@ properties:
         type: string
       meta_schema_file:
         type: string
+      primitive_schema_file:
+        type: string
+        description: "Path to the primitive meta-schema (schemas/index.yaml). Enables primitive YAML validation pass."
       vault_key_name:
         type: string
+        description: "Vault Transit key name used for signing release artifacts."
+      vault_cert_path:
+        type: string
+        description: "Vault KV v2 path to the signing certificate. Format: 'mount/secret-name/key'. Overridden by VAULT_CERT env var."
 
-  release:
+  x-cic:
     type: object
-    description: "Contains the cryptographic proof for a given release version. This block is populated by the CI/CD pipeline."
+    description: "CIC-specific extension fields — repo type declaration."
     properties:
-      version:
+      repo_type:
         type: string
-        description: "The semantic version of this release."
-      timestamp:
-        type: string
-        format: date-time
-        description: "The exact timestamp when this release was built and signed."
-      repository_tree_hash:
-        type: string
-        description: "The Git tree hash of the entire repository at the moment of release, proving the integrity of the full codebase."
-      sign:
-        type: string
-        description: "A cryptographic signature from Vault for the 'release' block content."
-    required:
-      - version
-      - timestamp
-      - repository_tree_hash
-      - sign
+        description: "Semantic repo type (primitive | schema | domain | adapter). Not yet enforced by compiler."
+        enum: [primitive, schema, domain, adapter]
+

@@ -1,5 +1,30 @@
 # cic-network — Claude kontextus
 
+## Nyelvi szabály — KÖTELEZŐ / Language policy — MANDATORY
+
+| Terület / Scope | Szabály / Rule |
+|---|---|
+| Kommunikáció (AI ↔ fejlesztő) | Magyar / Hungarian |
+| Commit üzenetek / Commit messages | **Angol / English** |
+| Kód kommentek, docstringek / Code comments, docstrings | **Angol / English** |
+| Schema YAML `description` mezők / fields | **Angol / English** |
+| Dokumentáció (README, ai/*.md) / Documentation | **Kétnyelvű HU+EN / Bilingual HU+EN** |
+| docs/hu/ | Magyar forrás / Hungarian source |
+| docs/en/ | Angol fordítás / English translation |
+
+---
+
+## Branch szabály — KÖTELEZŐ
+
+**Érdemi fejlesztés kizárólag a `network/devel` ágon történhet.**
+
+- `network/main` — csak merge fogad (network/devel → network/main), közvetlen commit tilos
+- `network/releases/v*` — kizárólag release tag célra
+- `network/devel` — ez az aktív fejlesztési ág
+
+Ha nem `network/devel`-en vagyunk: figyelmeztetés, és átváltás `network/devel`-re mielőtt bármilyen
+schema, kód vagy dokumentáció változtatás történik.
+
 ## Mi ez a rendszer
 
 A `cic-network` a CentralInfraCore **network domain schema repo** — a cic-primitives leszármazottja.
@@ -40,10 +65,11 @@ Amíg ez nincs meg, ne tegyél tényállításokat a network séma állapotáró
 
 | Elem | Státusz | Megjegyzés |
 |---|---|---|
-| `network-resource.yaml` | **draft** | unified, platform-agnosztikus — tervezés alatt |
-| `hypervisor-network-adapter.yaml` | **concept** | OVS/Linux bridge contract |
-| `cloud-network-adapter.yaml` | **concept** | cloud VPC/subnet/SG contract |
-| `switch-adapter.yaml` | **concept** | managed switch (NETCONF/RESTCONF) contract |
+| `network-interface.yaml` | **defined** | RFC 8343, cic-yang building blockok |
+| `switch-netconf-adapter` | **defined** | physical + vlan + lldp (NETCONF) |
+| `ovs-adapter` | **defined** | logical + vlan + tunnel + ipv4 + ipv6 (OVS) |
+| `make validate` zöld | **defined** | Docker-alapú tooling |
+| Signed release | **defined** | network/@v0.3.0 — ECDSA + cic_countersign |
 
 ---
 
@@ -59,11 +85,10 @@ Address: `{backend}/{provider}/{location}/{id}`
 ## Kompozíciós lánc
 
 ```
-base-repo (upstream sablon)
-    │  remote: base → git merge base@0.5.0 (via primitives)
-    └──► cic-primitives (primitives/@v0.1.2)
-              │  remote: base → git merge primitives/@v0.1.2
-              └──► cic-network (ez a repo)
+base-repo
+    └──► cic-primitives (primitives/@v0.1.5)
+              └──► cic-yang (yang/@v0.1.3)
+                        └──► cic-network (ez a repo)
 ```
 
 ---
