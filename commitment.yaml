@@ -1,8 +1,8 @@
 kind: DeveloperCommitment
-created: '2026-05-25T18:49:58.174252+00:00'
+created: '2026-05-26T04:48:12.066327+00:00'
 validity:
-  from: '2026-05-25'
-  until: '2027-05-25'
+  from: '2026-05-26'
+  until: '2027-05-26'
 createdBy:
   name: Gabor Zoltan Sinko
   email: sinkog@centralinfracore.hu
@@ -34,5 +34,5 @@ createdBy:
 
     '
 pledge:
-  content_hash: wmDDFMivE/jF9FObMS7R57AMT08b9zjp2oQFg/yAO04=
-  sign: vault:v1:MEYCIQCLwp6GOaufMGWz/eSixkwd6wMtIJrC2nnTVKIu3qkxagIhAMkjH6Alw8UzjK0dR5uJFJEs+FwKdBw/4k9gZJa5XKgw
+  content_hash: Cj3tMZDp7l+Pyf8FrgGGjikI7G3NXpLlJaDv9G2UZO4=
+  sign: vault:v1:MEUCIQCu+mPJNNW88MowqmC0SuOSlvbauRZ6BrgduZgqX1e4rAIgLFHacZtwhQedUrrAQYsRJhpkvJr3jWpis5tir7/VflQ=
