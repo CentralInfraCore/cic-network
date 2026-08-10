@@ -1,0 +1,387 @@
+---
+metadata:
+  name: NetworkInterface
+  version: v0.1.dev
+  description: >
+    Fizikai/logikai hálózati interfész mint ManagedEntity specializáció.
+    Ez NEM új primitive — a ManagedEntity aggregate konkrét cic:network domain-ra
+    való alkalmazása. Cél: a v0.1.5 release teljes primitív-készletét (Identity,
+    ConfigSurface, StateSurface, OperationSurface, PolicySurface, NotificationSurface,
+    BindingSurface — Shape, Role, Access, Contract, Behavior, Event, Address atomokkal)
+    egyetlen konkrét entitáson keresztül bemutatni, a kubernetes-pod.yaml mintát
+    kiegészítve az ott ki nem használt Access/PolicySurface réteggel.
+  owner: Gabor Zoltan Sinko
+  tags:
+    - example
+    - domain-composition
+    - network
+  validatedBy:
+    name: cic-primitives
+    version: v0.1.5
+
+spec:
+  kind: DomainComposition
+  base:
+    aggregate: ManagedEntity
+    ref: schemas/aggregate/managed-entity.yaml
+
+  # ── Identity ────────────────────────────────────────────────────────────────
+  identity:
+    atomic_ref: schemas/atomic/identity.yaml
+    kind: NetworkInterface
+    namespace: "cic:network"
+    version: v0.1.5
+    base: "cic:core:ManagedEntity"
+    abstract: false
+    description: Hálózati interfész — switch/router port vagy logikai (VLAN/bond) interfész
+
+  # ── ConfigSurface ────────────────────────────────────────────────────────────
+  config_surface:
+    aggregate_ref: schemas/aggregate/config-surface.yaml
+    nodes:
+      - name: admin_state
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: scalar
+        scalar_type: string
+        role: config
+        mandatory: true
+        description: >
+          Kívánt admin állapot. Access atom hosszú formában — csak network-operators
+          írhatja, olvasás mindenkinek nyitott.
+        contract:
+          - type: enum
+            expression: [up, down]
+            error_message: admin_state csak up vagy down lehet
+        access:
+          value: up
+          access: ["*"]
+          modify: ["OU=network-operators,O=cic"]
+          inherit: true
+          default_injection: null
+          conformance: implemented
+
+      - name: mode
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: scalar
+        scalar_type: string
+        role: config
+        mandatory: true
+        description: Port mód — access vagy trunk
+        contract:
+          - type: enum
+            expression: [access, trunk]
+
+      - name: mtu
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: scalar
+        scalar_type: integer
+        role: config
+        optional: true
+        default: 1500
+        description: Maximum Transmission Unit
+        contract:
+          - type: range
+            expression: "68..9216"
+            error_message: mtu értéke 68 és 9216 között kell legyen
+
+      - name: vlan_id
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: scalar
+        scalar_type: integer
+        role: config
+        optional: true
+        description: Access VLAN azonosító — csak mode=access esetén értelmezett
+        contract:
+          - type: range
+            expression: "1..4094"
+          - type: when
+            expression: "../mode = 'access'"
+            error_message: vlan_id csak access módban engedélyezett
+
+      - name: ip_addresses
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: collection
+        collection_variant: list
+        role: config
+        optional: true
+        description: Interfészre kötött IP címek listája
+        item_fields:
+          - name: address
+            shape_type: scalar
+            scalar_type: string
+            role: key
+            contract:
+              - type: pattern
+                expression: "^([0-9]{1,3}\\.){3}[0-9]{1,3}$"
+          - name: prefix_length
+            shape_type: scalar
+            scalar_type: integer
+            contract:
+              - type: range
+                expression: "0..32"
+
+      - name: poe_enabled
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: scalar
+        scalar_type: boolean
+        role: config
+        optional: true
+        description: >
+          Power-over-Ethernet — csak PoE-képes hardveren létezik. Nem minden eszközön
+          implementált mező; conformance jelzi a device-szintű támogatást (D-012).
+        access:
+          value: false
+          access: ["*"]
+          modify: ["OU=network-operators,O=cic"]
+          inherit: true
+          default_injection: null
+          conformance: not_implemented
+
+  # ── StateSurface ─────────────────────────────────────────────────────────────
+  state_surface:
+    aggregate_ref: schemas/aggregate/state-surface.yaml
+    source: snmp-adapter
+    freshness:
+      ttl: 15s
+      strategy: polling
+    nodes:
+      - name: oper_state
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: scalar
+        scalar_type: string
+        role_ref: schemas/atomic/role.yaml
+        role: state
+        description: Tényleges (megfigyelt) linkállapot
+        contract:
+          - type: enum
+            expression: [up, down, testing, unknown]
+
+      - name: in_octets
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: scalar
+        scalar_type: integer
+        role_ref: schemas/atomic/role.yaml
+        role: operational
+        description: Bejövő byte counter — monoton növekvő
+
+      - name: out_octets
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: scalar
+        scalar_type: integer
+        role_ref: schemas/atomic/role.yaml
+        role: operational
+        description: Kimenő byte counter — monoton növekvő
+
+      - name: effective_state
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: scalar
+        scalar_type: string
+        role_ref: schemas/atomic/role.yaml
+        role: derived
+        description: admin_state + oper_state kombinációjából számított effektív állapot
+
+      - name: last_seen
+        atomic_ref: schemas/atomic/shape.yaml
+        shape_type: scalar
+        scalar_type: string
+        role_ref: schemas/atomic/role.yaml
+        role: volatile
+        description: Legutóbbi sikeres SNMP poll időbélyege — cache TTL után eldobható
+
+  # ── OperationSurface ─────────────────────────────────────────────────────────
+  operation_surface:
+    aggregate_ref: schemas/aggregate/operation-surface.yaml
+    operations:
+      - name: enable
+        atomic_ref: schemas/atomic/behavior.yaml
+        type: action
+        idempotent: true
+        description: admin_state átállítása up-ra
+        input: null
+        output:
+          - name: admin_state
+            shape_type: scalar
+            scalar_type: string
+
+      - name: disable
+        atomic_ref: schemas/atomic/behavior.yaml
+        type: action
+        idempotent: true
+        description: admin_state átállítása down-ra
+        input: null
+        output:
+          - name: admin_state
+            shape_type: scalar
+            scalar_type: string
+
+      - name: reset-counters
+        atomic_ref: schemas/atomic/behavior.yaml
+        type: action
+        idempotent: false
+        description: in_octets/out_octets nullázása az adapteren
+        input: null
+        output:
+          - name: reset_at
+            shape_type: scalar
+            scalar_type: string
+
+      - name: loopback-test
+        atomic_ref: schemas/atomic/behavior.yaml
+        type: operation
+        idempotent: true
+        description: Async loopback diagnosztika — job-referenciát ad vissza
+        input:
+          - name: duration_seconds
+            shape_type: scalar
+            scalar_type: integer
+            default: 10
+        output:
+          - name: job_id
+            shape_type: scalar
+            scalar_type: string
+
+  # ── NotificationSurface ──────────────────────────────────────────────────────
+  notification_surface:
+    events:
+      - name: link-state-changed
+        atomic_ref: schemas/atomic/event.yaml
+        trigger: state_change
+        severity: warning
+        description: oper_state megváltozott (pl. up → down)
+        payload:
+          - name: previous_state
+            shape_type: scalar
+            scalar_type: string
+          - name: current_state
+            shape_type: scalar
+            scalar_type: string
+
+      - name: mtu-mismatch-detected
+        atomic_ref: schemas/atomic/event.yaml
+        trigger: threshold
+        severity: error
+        description: Szomszédos interfész MTU-ja eltér a configolt mtu-tól
+        payload:
+          - name: local_mtu
+            shape_type: scalar
+            scalar_type: integer
+          - name: peer_mtu
+            shape_type: scalar
+            scalar_type: integer
+
+  # ── PolicySurface ────────────────────────────────────────────────────────────
+  policy_surface:
+    aggregate_ref: schemas/aggregate/policy-surface.yaml
+    default_access: ["*"]
+    default_modify: ["OU=network-operators,O=cic"]
+    surface_rules:
+      - surface: state_surface
+        access: ["*"]
+        modify: []
+      - surface: config_surface
+        access: ["*"]
+        modify: ["OU=network-operators,O=cic"]
+    inherit_policy: true
+
+  # ── BindingSurface ───────────────────────────────────────────────────────────
+  binding_surface:
+    addresses:
+      - atomic_ref: schemas/atomic/address.yaml
+        schema_path: "/cic-network:interfaces/interface={name}"
+        api_path: "/restconf/data/cic-network:interfaces/interface={name}"
+        logical_id: "cic:network:{device}:{name}"
+        namespace: "cic:network"
+    adapter: snmp-adapter
+
+# ── Levezetési lánc (reality check) ───────────────────────────────────────────
+derivation_chain:
+
+  yang:
+    module: cic-network-interface
+    namespace: "urn:cic:network:interface"
+    description: Generált YANG modul vázlat
+    content: |
+      module cic-network-interface {
+        namespace "urn:cic:network:interface";
+        prefix cic-if;
+
+        list interface {
+          key "name";
+          leaf name { type string; }
+
+          container config {
+            leaf admin-state { type enumeration { enum up; enum down; } mandatory true; }
+            leaf mode        { type enumeration { enum access; enum trunk; } mandatory true; }
+            leaf mtu         { type uint16 { range "68..9216"; } default 1500; }
+            leaf vlan-id     { type uint16 { range "1..4094"; } when "../mode = 'access'"; }
+            list ip-addresses {
+              key address;
+              leaf address        { type string { pattern '([0-9]{1,3}\.){3}[0-9]{1,3}'; } }
+              leaf prefix-length  { type uint8 { range "0..32"; } }
+            }
+            leaf poe-enabled { type boolean; }
+          }
+
+          container state {
+            config false;
+            leaf oper-state      { type enumeration { enum up; enum down; enum testing; enum unknown; } }
+            leaf in-octets       { type uint64; }
+            leaf out-octets      { type uint64; }
+            leaf effective-state { type string; config false; }
+            leaf last-seen       { type string; }
+          }
+
+          action enable          { output { leaf admin-state { type string; } } }
+          action disable         { output { leaf admin-state { type string; } } }
+          action reset-counters  { output { leaf reset-at { type string; } } }
+          action loopback-test   { input { leaf duration-seconds { type uint16; default 10; } }
+                                    output { leaf job-id { type string; } } }
+
+          notification link-state-changed {
+            leaf previous-state { type string; }
+            leaf current-state  { type string; }
+          }
+        }
+      }
+
+  restconf:
+    collection: "GET /restconf/data/cic-network:interfaces"
+    instance:   "GET /restconf/data/cic-network:interfaces/interface={name}"
+    config:
+      read:   "GET    /restconf/data/cic-network:interfaces/interface={name}/config"
+      update: "PUT    /restconf/data/cic-network:interfaces/interface={name}/config"
+      patch:  "PATCH  /restconf/data/cic-network:interfaces/interface={name}/config"
+    state:
+      read:   "GET    /restconf/data/cic-network:interfaces/interface={name}/state"
+    operations:
+      enable:         "POST /restconf/operations/cic-network:interfaces/interface={name}/enable"
+      disable:        "POST /restconf/operations/cic-network:interfaces/interface={name}/disable"
+      reset-counters: "POST /restconf/operations/cic-network:interfaces/interface={name}/reset-counters"
+      loopback-test:  "POST /restconf/operations/cic-network:interfaces/interface={name}/loopback-test"
+    events:
+      stream: "GET /restconf/streams/cic-network-interface-events"
+
+  nacm:
+    note: >
+      PolicySurface → NACM-analóg leképezés. config_surface írás csak
+      OU=network-operators,O=cic csoportnak; state_surface mindenkinek olvasható.
+      admin_state és poe_enabled mezőkön a field-level Access atom felülírja
+      a surface-szintű default_modify-t (jelen esetben azonos csoportra).
+
+  runtime:
+    reconcile_loop: |
+      1. observe:   snmp-adapter.get_interface(name) → state_surface
+      2. compare:   diff(config_surface, state_surface) → drift?
+      3. if drift:
+           admin_state changed → enable/disable action → snmp-adapter.set_admin_state(...)
+           mtu changed         → snmp-adapter.set_mtu(...)
+           vlan_id changed     → snmp-adapter.set_vlan(...)
+      4. emit:      link-state-changed event ha oper_state eltért
+    adapter_contract:
+      observe:  "SNMP GET ifTable/ifXTable (ifOperStatus, ifInOctets, ifOutOctets)"
+      apply:    "SNMP SET ifAdminStatus / vendor-specific MIB (VLAN, MTU)"
+      watch:    "SNMP TRAP linkUp/linkDown"
+    conformance_enforcement: >
+      poe_enabled írása not_implemented eszközön HARD REJECT-et vált ki
+      ("field not implemented on device X") — nem silent no-op, a Relay
+      elutasítja a kérést.
