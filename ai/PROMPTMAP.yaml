@@ -1,5 +1,14 @@
 version: 1
-context: cic-primitives
+context: cic-network
+
+# MEGJEGYZÉS: az alábbi entries teljes egészében a `cic-primitives` saját,
+# öröklött (scaffold-másolással idekerült) bootstrap-története — mind
+# "done", és mind a primitíva-réteg (atomic/aggregate schemas) LÉTREHOZÁSÁRÓL
+# szól, amit ez a repo sosem hajtott végre, csak örökölt. A `cic-network`
+# saját munkája (a `NetworkInterface` domain composition,
+# `schemas/examples/network-interface.yaml`) nincs itt task-ként logolva —
+# közvetlenül készült. A `cic-network` saját, aktív feladatsora jelenleg
+# üres.
 
 # Státuszok: pending | in_progress | done | blocked
 

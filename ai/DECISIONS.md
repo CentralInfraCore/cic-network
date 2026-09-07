@@ -1,7 +1,15 @@
 # Tervezési döntések
 
-A fogalmak kialakulásának history-ja. Ha egy döntés eredetét keresed,
-itt keresd először. Részletes thread: `primitive.txt`.
+**D-001–D-014 lent a `cic-primitives` saját, öröklött döntési naplója** — a
+primitíva-grammatika (8 atom, sealed/defaulted/required slot-ok, YANG-inspiráció,
+build_hash/source_hash szétválasztás stb.) tervezési háttere, nem a `cic-network`
+saját döntései. A `primitive.txt` hivatkozott részletes thread **nem létezik
+ebben a repóban** (a `cic-primitives`-ban él) — ez is a scaffold-másolásból
+maradt, nem javított hivatkozás.
+
+A `cic-network` saját, valódi döntése eddig egy: a `NetworkInterface` domain
+composition felépítése a `ManagedEntity` aggregate-ből (lásd
+`schemas/examples/network-interface.yaml` fejléc-kommentjét).
 
 ---
 
@@ -90,8 +98,10 @@ a `project.schema.yaml`-ban és a `compiler.py`-ban.
 **Jelenlegi állapot:** A `repo_type` nem `compiler_settings` alatt van — a compiler még
 nem ismeri. A szándék `x-cic.repo_type: primitive`-ként dokumentálva a `project.yaml`-ban.
 
-**Miért nem schema:** A cic-primitives nem egyszerű schema repo — schema-képző primitive
-repo. Ha `schema` típus kerülne be, szemantikailag torzítaná a toolingot.
+**Miért nem schema:** A `cic-primitives` (ahonnan ez a döntés öröklődött) nem egyszerű
+schema repo — schema-képző primitive repo. Ha `schema` típus kerülne be, szemantikailag
+torzítaná a toolingot. (A `cic-network`, ahol ez a fájl most él, `x-cic.repo_type: domain`
+— ez a döntés csak a primitíva-réteg saját típusára vonatkozott.)
 
 **Következmény:** A `compiler.py` és `project.schema.yaml` kiterjesztése a base-repo-ban
 szükséges. Addig: `x-cic.repo_type: primitive` a szándék hordozója, `compiler_settings`-ben
