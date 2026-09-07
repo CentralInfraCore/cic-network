@@ -6,10 +6,13 @@ Olvasd el mielőtt bármit módosítasz.
 
 ## Mi ez a rendszer?
 
-A `cic-primitives` a CentralInfraCore **meta-séma rétege**.
+A `cic-network` egy **domain-repó** a `cic-primitives` (a CentralInfraCore
+meta-séma rétege) fölött — hálózati objektumokat ír le, a `cic-primitives`
+atomjaiból/aggregate-jeiből komponálva.
 
-Nem domain modell, nem IaC tool, nem YANG leíró — hanem az a szint,
-amelyből minden domain objektum schema-szinten levezethető.
+Ez a fájl az öröklött primitíva-modellt magyarázza (a `cic-primitives`-ból
+származik), hogy a domain-kompozíció (`schemas/examples/network-interface.yaml`)
+megírásához legyen kontextus — ez a repó maga nem a meta-séma réteg.
 
 A primitívek két szinten léteznek:
 
@@ -45,7 +48,7 @@ ManagedEntity =
 ```
 base-repo
   └─[remote: base]─► cic-primitives
-                          └─[remote: base]─► domain repók
+                          └─[remote: base]─► cic-network (ez a repo), cic-yang, ...
 ```
 
 A fájlstruktúra IS az interface contract. Ha a leszármazott repo eltér a
@@ -58,9 +61,9 @@ Választott mechanizmus (döntés: 2026-04-30):
 
 ---
 
-## A séma infrastruktúra (örökölt base-repo-ból)
+## A séma infrastruktúra (örökölt a `cic-primitives`-on, végső soron a `base-repo`-n keresztül)
 
-A `base-repo` merge után elérhetők:
+A `cic-primitives` `base` remote-jából merge-elve elérhetők:
 
 ```
 tools/compiler.py     CLI: validate, release, get-name
@@ -138,43 +141,30 @@ spec:
 
 | Repo | Kapcsolat | Irány |
 |---|---|---|
-| `base-repo` | git remote `base` | upstream → cic-primitives |
+| `cic-primitives` | git remote `base` | upstream → cic-network (ez a repo) |
+| `base-repo` | közvetett (a `cic-primitives` saját `base` remote-ja) | tooling eredete |
 | `CIC-Schemas` | referencia minta | signing lánc minta |
-| `CIC-Relay` | consumer | primitívekből épülő sémák futtatása |
-| domain repók (tervezett) | git remote `base` | cic-primitives → domain |
+| `CIC-Relay` | consumer | a `network-interface.yaml` kompozíció futtatása |
 
 ---
 
-## Jelenlegi állapot (2026-05-01)
+## Jelenlegi állapot
 
-Phase 1–7 végrehajtva. A repo első signed release-szel lezárt.
-
-| Elem | Státusz |
-|---|---|
-| git init + `git merge base@0.5.0` | **defined** |
-| `dependency.yaml` (D-007) | **defined** |
-| `project.yaml` | **defined** |
-| `schemas/` struktúra | **defined** |
-| aggregate skeletonök (4 db) | **defined** |
-| atomic layer (8 atom) | **defined** |
-| aggregate completion (atomic ref-ek) | **defined** |
-| domain példa (`schemas/examples/kubernetes-pod.yaml`) | **defined** |
-| `make validate` zöld | **defined** |
-| primitive YAML validáció (`schemas/index.yaml` + compiler.py) | **defined** — Phase 6.1+6.2 |
-| domain specializáció semantic check | **defined** — Phase 6.3, sealed/required enforcement |
-| AI governance (README, MAINTENANCE_CONTRACT, invalid examples) | **defined** |
-| első signed release (`primitives/@v0.1.0`) | **defined** — Phase 7 |
-| ExecutionSurface aggregate | **concept** — D-009, Relay modell után |
-| build_hash tényleges build env-vel | **concept** — jelenleg = source_hash |
-| `make release` yq PATH fix | **defined** — yq telepítve a Dockerfile-ban |
+**A "Phase 1–7" történet fentebb (git bootstrap, atomic/aggregate réteg,
+`make validate` zöld) a `cic-primitives` saját fejlesztési naplója — ez a
+repó ezt öröklés útján kapta meg, nem maga hajtotta végre.** A `cic-network`
+saját, valódi státusza (2026-09-07-ig): lásd a README "Aktuális állapot"
+táblázatát — legfontosabb tétel a `NetworkInterface` domain composition
+(`schemas/examples/network-interface.yaml`) és a `network/@v0.4.1` signed
+release.
 
 ---
 
-## Release folyamat (Phase 7 tanulságok)
+## Release folyamat (a `cic-primitives`-tól örökölt tanulságok, `network/*` névtérre igazítva)
 
 ```bash
 # Előfeltételek
-git checkout -b primitives/releases/vX.Y.Z
+git checkout -b network/releases/vX.Y.Z
 tools/vault-sign-agent.sh -k <developer.key> -c <developer.crt>
 
 # Release
@@ -184,7 +174,7 @@ export VAULT_SKIP_VERIFY=1
 make release
 
 git add project.yaml
-git tag -a "primitives/@vX.Y.Z" -m "release: X.Y.Z"
+git tag -a "network/@vX.Y.Z" -m "release: X.Y.Z"
 ```
 
 Dockerfile követelmény: `git`, `curl`, `jq`, `yq` + `safe.directory /app`.
